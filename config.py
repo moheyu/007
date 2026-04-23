@@ -57,3 +57,26 @@ CRAWL_CONFIG = {
 # 基础URL配置（保持向后兼容）
 DASHSCOPE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 DASHSCOPE_MODEL = "qwen3.6-plus"
+
+# ====================== RAG 知识库配置 ======================
+import os
+from pathlib import Path
+
+# 项目根目录（自动计算，无需修改）
+BASE_DIR = Path(__file__).parent
+
+# 向量数据库配置
+CHROMA_DB_PATH = BASE_DIR / "chroma_db"
+CHROMA_COLLECTION_NAME = "javaguide_kb"
+
+# 本地嵌入模型路径（优先读取环境变量，否则使用默认值）
+# 如果你在其他电脑上使用，只需在 .env 中设置 EMBEDDING_MODEL_PATH 即可
+EMBEDDING_MODEL_PATH = os.getenv(
+    "EMBEDDING_MODEL_PATH",
+    str(BASE_DIR / "models" / "bge-small-zh-v1.5")  # 建议把模型复制到项目内
+)
+
+# 服务配置
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", 8000))
+DEBUG = os.getenv("DEBUG", "true").lower() == "true"
