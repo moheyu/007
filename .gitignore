@@ -1,0 +1,26 @@
+# 日志文件（不想提交的）
+v1版本日志.md
+
+# 敏感配置
+.env
+
+# IDE 目录（根据需求，也可以忽略整个 .idea）
+.idea/
+.vscode/
+
+# Python 生成物
+__pycache__/
+*.py[cod]
+
+# 数据与输出目录
+data/
+output/
+chroma_db/
+progress.json
+urls.txt
+
+# 爬虫目录
+爬虫/
+
+# 其他
+qwen_rag/
