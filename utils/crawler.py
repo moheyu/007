@@ -8,6 +8,8 @@ import hashlib
 # 全局状态
 visited_urls = set()
 queue = []
+crawled_pages = 0
+MAX_PAGES = 100  # 单次爬取最大页面数
 
 # ✅ 核心：URL规范化（彻底去重）
 def normalize_url(base_url, link):
@@ -16,9 +18,11 @@ def normalize_url(base_url, link):
 
 # ✅ 核心：每次成功爬取就存进度
 def crawl_page(url, domain, max_depth, current_depth=0):
-    if current_depth > max_depth or url in visited_urls:
+    global crawled_pages
+    if current_depth > max_depth or url in visited_urls or crawled_pages >= MAX_PAGES:
         return
     visited_urls.add(url)
+    crawled_pages += 1
 
     print(f"[爬取] {url} 深度：{current_depth}")
     content = extract_content(url)
@@ -45,18 +49,26 @@ def crawl_page(url, domain, max_depth, current_depth=0):
     except Exception as e:
         print(f"[链接发现失败] {url} 错误：{str(e)}")
 
-# ✅ 续爬：自动读取历史配置
-def resume_crawl():
+# ✅ 续爬：自动读取历史配置，支持指定续爬 URL
+def resume_crawl(url=None):
     progress = load_progress()
     if not progress:
         print("[错误] 无进度文件，无法续爬")
         return
-    global visited_urls
+    global visited_urls, crawled_pages
     visited_urls = set(progress.get("visited", []))
-    domain = progress["domain"]
-    max_depth = progress["max_depth"]
-    print(f"[续爬] 域名：{domain}，深度：{max_depth}，已爬：{len(visited_urls)}页")
-    crawl_page(domain, domain, max_depth)
+    crawled_pages = 0  # 重置计数器，确保续爬时不超过100页
+    
+    # 如果提供了 URL，使用它作为续爬起点；否则使用进度文件中的域名
+    if url:
+        domain = f"{urlparse(url).scheme}://{urlparse(url).netloc}"
+        print(f"[续爬] 指定根域名：{domain}，深度：{progress['max_depth']}，已爬：{len(visited_urls)}页，本次续爬最多再爬{MAX_PAGES}页")
+        crawl_page(url, domain, progress["max_depth"])
+    else:
+        domain = progress["domain"]
+        max_depth = progress["max_depth"]
+        print(f"[续爬] 域名：{domain}，深度：{max_depth}，已爬：{len(visited_urls)}页，本次续爬最多再爬{MAX_PAGES}页")
+        crawl_page(domain, domain, max_depth)
 
 # 保持向后兼容的函数
 def process_single_url(url, mode, config, api_config):
@@ -90,7 +102,8 @@ def crawl_site(start_url, mode="process",
     # 保持向后兼容，调用新的爬取逻辑
     domain = f"{urlparse(start_url).scheme}://{urlparse(start_url).netloc}"
     print(f"[开始] 爬取域名：{domain}，深度：{max_depth}")
-    global visited_urls
+    global visited_urls, crawled_pages
     visited_urls = set()
+    crawled_pages = 0  # 重置计数器，确保不超过100页
     crawl_page(start_url, domain, max_depth)
     print("[完成] 爬取结束，已自动保存进度+清理临时文件")

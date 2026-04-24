@@ -20,7 +20,7 @@ def get_save_path(url):
     filename = f"{domain.replace('.', '_')}_{hash_name}.md"
     return os.path.join(dir_path, filename)
 
-# ✅ 保存内容（编码容错，不崩）
+# ✅ 保存内容（同时保存 markdown 和 JSON）
 def save_content(url, content):
     if not content:
         return
@@ -28,6 +28,28 @@ def save_content(url, content):
     with open(file_path, "w", encoding="utf-8", errors="replace") as f:
         f.write(f"# {url}\n\n{content}")
     print(f"[保存] {file_path}")
+
+    # 同时保存 JSON（供增量索引使用）
+    try:
+        domain = urlparse(url).netloc
+        json_dir = os.path.join(BASE_OUTPUT, "json", domain)
+        os.makedirs(json_dir, exist_ok=True)
+        hash_name = hashlib.md5(url.encode()).hexdigest()[:8]
+        filename = f"{domain.replace('.', '_')}_{hash_name}.json"
+        json_path = os.path.join(json_dir, filename)
+
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump({
+                "content": content,
+                "metadata": {
+                    "title": url,
+                    "url": url,
+                    "source": file_path
+                }
+            }, f, ensure_ascii=False)
+        print(f"[保存] {json_path}")
+    except Exception as e:
+        print(f"[JSON保存失败] {url}: {e}")
 
 # 进度保存/加载 + 自动清理临时文件
 def save_progress(visited, domain, max_depth):

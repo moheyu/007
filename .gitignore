@@ -24,3 +24,8 @@ urls.txt
 
 # 其他
 qwen_rag/
+
+models/
+
+*.log
+hs_err_pid*.log

@@ -1,0 +1,2 @@
+https://www.firecrawl.dev/templates
+https://www.firecrawl.dev/agent-onboarding/SKILL.md
